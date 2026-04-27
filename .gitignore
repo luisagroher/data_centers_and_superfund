@@ -134,6 +134,9 @@ venv.bak/
 conda-env/
 .python-version       # pyenv
 
+#--- R-Checkpoints ---------
+.Rhistory
+
 
 # ── JUPYTER ─────────────────────────────────────────────────
 .ipynb_checkpoints/
