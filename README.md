@@ -17,4 +17,6 @@ FracTracker data is used as a supplemental layer to map industrial
 infrastructure and chemical-adjacent activity in proximity to both data center
 locations and Superfund sites.
 
-4.
+# Data structure
+
+data is stored in data/raw and data/clean
