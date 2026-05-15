@@ -36,7 +36,7 @@ INTERIM_DC = Path("data/interim/data_centers_cleaned.gpkg")
 INTERIM_SF = Path("data/interim/superfund_deduplicated.gpkg")
 
 CRS     = "EPSG:4326"
-EO_DATE = pd.Timestamp("2025-07-01")
+EO_DATE = pd.Timestamp("2025-07-23")
 
 # ── REGION MAP ───────────────────────────────────────────────────────────────
 
