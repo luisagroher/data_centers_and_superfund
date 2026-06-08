@@ -1,0 +1,50 @@
+# Notebook 1: Raw Data Exploration:
+
+Purpose: 
+Tracking proposed data centers near Superfund Sites
+The goal is to understand the quality and limitations of these datasets in order to decide what pre-processing steps need to be addressed before analysis.
+
+This Notebook explores the raw data from two sources before any cleaning or pre-processing:
+FracTracker data center datatbase
+EPA SuperFund site database
+
+## Comments:
+- an outside reader may need a short introduction on SuperFund Sites and the Executive Order
+- Surprised facility characteristic categories are not available (cost, nr. generators, nr. buildings etc.)
+- In 47: Data Centers Created per Month: Could we also do a graph of cumulative (Total count of data centers, in the different categories?). I think we can take April to December 2024 as a baseline, since the rate of increase is steady during that time period.
+- I agree with collapsing Status into a bucket variable status_group
+- Deduplication: Explain why ties are broken by largest GIS_AREA?
+
+## Thoughts Notebook 1:
+- Data centers over time, In 47: Spike following EO. Then the rate drops off. Are all the available sites now taken? We probably cannot answer this...
+
+
+# Notebook 3: Spatial Proximity Analysis:
+
+Project: Tracking Proposed Data Centers near Superfund Sites
+
+Purpose:
+Explores spatial features produced by examining the proximity between data centers and Superfund sites across regions. 
+Uses 0,5 miles, 1 mile, 3 miles, 5 miles and proximity metrics and explores each.
+
+## Key findings
+
+- Operating data centers are historically closer to superfund sites than active proposals, suggesting legacy industrial patterns for developing sites
+- Data centers that were proposed after the Executive Order are closer to superfund sites across all distance thresholds
+    - At 1 mile: 2.0% pre-EO In Pipeline → 4.6% post-EO (+2.6pp, 2.3x increase)
+    - At 3 miles: 7.2% pre-EO → 15.4% post-EO (+8.2pp) — primary threshold finding
+- The Midwest has the largest shift in proximity to superfund sites following the executive (+9.8pp at 3 miles)
+- Atlanta has the highest concentration of data centers near superfund sites (22 DCs within 1 mile)
+- California semiconductor legacy sites (Intel, AMD, Applied Materials, Fairchild) have active DC development within 1 mile
+
+## Comments:
+Note on methodology:
+- Point 3: Superfund distances are measured from the superfund centroid to the boundary?
+- Point1: Distribution. Maybe I am confused, so if we could revisit this point, it might help.
+	- Most DC are within 10 miles (so we cap at 5 miles to avoid right-skew in data).
+	- There are more Operating (i.e. existing) DC within 5 miles of a SF site (Graph 1)
+	- But then the %age post EO picks up in both total and in-pipeline DC within 5 miles (Graph 2 and 3)
+		- I think I interpret it that Graph 3 (in-pipeline DC) should come first, before calculating total %age.
+
+### Binary Threshold analysis:
+- These all look very similar
