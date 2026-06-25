@@ -1,0 +1,6 @@
+[core]
+    remote = dagshub
+['remote "origin"']
+    url = https://dagshub.com/luisagroher/data_centers_and_superfund.dvc
+['remote "dagshub"']
+    url = https://dagshub.com/luisagroher/data_centers_and_superfund.dvc
