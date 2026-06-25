@@ -52,30 +52,32 @@ def define_plot_style():
 
 
 COLORS = {
-        # Primary categories
-        'proposed': '#E07B54',  # warm orange  — proposed data centers
-        'operating': '#4F8EF7',  # blue         — operating data centers
-        'superfund': '#6ABF69',  # green        — superfund sites
+        # Primary categories — aligned with Brockovich Data Center visual grammar
+        'operating': '#2ECC71',   # emerald green   — operational data centers (built & running)
+        'under_construction': '#E67E22',  # orange    — under construction (announced / building)
+        'proposed': '#9B59B6',      # purple          — proposed (in pipeline / pending approval)
+        'superfund': '#4F8EF7',     # blue            — superfund sites (your domain, not on Brockovich)
 
         # Pre/Post EO
-        'pre_eo': '#A8BFDB',  # muted blue
-        'post_eo': '#E8A838',  # amber
+        'pre_eo': '#A8BFDB',        # muted blue
+        'post_eo': '#E8A838',       # amber
 
         # Regions
-        'northeast': '#7B6FAB',  # purple
-        'south': '#E07B54',  # warm orange
-        'midwest': '#4F8EF7',  # blue
-        'west': '#6ABF69',  # green
+        'northeast': '#7B6FAB',     # purple
+        'south': '#E07B54',         # warm orange
+        'midwest': '#4F8EF7',       # blue
+        'west': '#2ECC71',          # green
 
         # Neutral / supporting
-        'highlight': '#E84B4B',  # red          — callout/alert
-        'neutral': '#AAAAAA',  # gray         — background/reference
-        'background': '#F7F7F7',  # off-white
+        'highlight': '#E74C3C',     # red             — callout/alert
+        'neutral': '#AAAAAA',       # gray            — background/reference
+        'background': '#F7F7F7',    # off-white
     }
 
 STATUS_PALETTE = {
-        'Proposed': COLORS['proposed'],
         'Operating': COLORS['operating'],
+        'Under Construction': COLORS['under_construction'],
+        'Proposed': COLORS['proposed'],
     }
 
 REGION_PALETTE = {
@@ -89,3 +91,4 @@ EO_PALETTE = {
         False: COLORS['pre_eo'],
         True: COLORS['post_eo'],
     }
+
