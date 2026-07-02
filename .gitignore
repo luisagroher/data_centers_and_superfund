@@ -6,10 +6,11 @@
 
 # ── DATA ────────────────────────────────────────────────────
 # All data is tracked by DVC, not Git
-data/raw/
-data/processed/
-data/interim/
-data/external/
+!data/*.dvc
+!data/raw/*.dvc
+!data/interim/*.dvc
+!data/processed/*.dvc
+
 
 # But keep the directory structure
 !data/.gitkeep
@@ -336,4 +337,3 @@ docker-compose.override.yml
 *.safetensors
 *.npy
 *.npz
-/data
