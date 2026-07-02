@@ -336,3 +336,4 @@ docker-compose.override.yml
 *.safetensors
 *.npy
 *.npz
+/data
