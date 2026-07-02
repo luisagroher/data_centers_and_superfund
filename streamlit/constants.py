@@ -18,16 +18,17 @@ Once the upstream pipeline is updated to expose these categories on
 read ``status_group`` instead of ``dashboard_status``.
 ─────────────────────────────────────────────────────────────────────────────
 """
-from pathlib import Path
-
 import pandas as pd
 
 from src.tufte_style import COLORS
 
 # ── PATHS ────────────────────────────────────────────────────
-DATA_DIR = Path("data/processed")
-DC_PATH  = DATA_DIR / "data_center_features.gpkg"
-SF_PATH  = DATA_DIR / "superfund_features.gpkg"
+_DAGSHUB_BASE = (
+    "https://dagshub.com/luisagroher/data_centers_and_superfund"
+    "/raw/main/data/processed"
+)
+DC_PATH = f"{_DAGSHUB_BASE}/data_center_features.gpkg"
+SF_PATH = f"{_DAGSHUB_BASE}/superfund_features.gpkg"
 
 # ── CRS ──────────────────────────────────────────────────────
 CRS_WGS84       = "EPSG:4326"
