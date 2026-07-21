@@ -42,16 +42,20 @@ DISTANCE_THRESHOLDS = [0.5, 1, 3, 5]  # miles
 NPL_FINAL_ONLY      = True            # toggle for sensitivity analysis
 
 # ── STATUS GROUP MAP ─────────────────────────────────────────────────────────
+# "In pipeline" (for spatial counts / causal primary sample) is the union of
+# Proposed + Under Construction + Expanding — see IN_PIPELINE_STATUSES below.
 
-STATUS_GROUP_MAP = {
-    "Proposed"                             : "In Pipeline",
-    "Approved/Permitted/Under Construction": "In Pipeline",
-    "Expanding"                            : "In Pipeline",
-    "Operating"                            : "Operating",
+DASHBOARD_STATUS_MAP = {
+    "Proposed"                             : "Proposed",
+    "Approved/Permitted/Under Construction": "Under Construction",
+    "Operating"                            : "Operational",
+    "Expanding"                            : "Expanding",
     "Cancelled"                            : "Inactive",
     "Suspended"                            : "Inactive",
     "Unknown"                              : "Inactive",
 }
+
+IN_PIPELINE_STATUSES = ["Proposed", "Under Construction", "Expanding"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -102,7 +106,7 @@ def read_and_validate(interim_dc: Path, interim_sf: Path):
         print(f"  ⚠  SF rows with null geometry dropped: {n_before - len(sf)}")
 
     # ── Add status_group to DC ────────────────────────────────────────────────
-    dc["status_group"] = dc["status"].map(STATUS_GROUP_MAP)
+    dc["status_group"] = dc["status"].map(DASHBOARD_STATUS_MAP)
     n_unmapped = dc["status_group"].isnull().sum()
     if n_unmapped:
         print(f"  ⚠  Unmapped status values: {n_unmapped} "
@@ -215,8 +219,10 @@ def build_sf_features(
     """
     For each SF site centroid, computes:
     - dc_count_within_{X}mi       : total DCs within threshold
-    - pipeline_count_within_{X}mi : In Pipeline DCs within threshold
-    - operating_count_within_{X}mi: Operating DCs within threshold
+    - pipeline_count_within_{X}mi : DCs within threshold whose status_group is
+                                     in IN_PIPELINE_STATUSES (Proposed,
+                                     Under Construction, Expanding)
+    - operating_count_within_{X}mi: Operational DCs within threshold
     """
     print("\n── Step 4: SF-Centric Spatial Features ──────────────")
 
@@ -227,8 +233,8 @@ def build_sf_features(
     print(f"  ✓ Centroids computed for {len(sf_metric):,} SF sites")
 
     # ── Subsets by status group ───────────────────────────────────────────────
-    dc_pipeline  = dc_metric[dc_metric["status_group"] == "In Pipeline"]
-    dc_operating = dc_metric[dc_metric["status_group"] == "Operating"]
+    dc_pipeline  = dc_metric[dc_metric["status_group"].isin(IN_PIPELINE_STATUSES)]
+    dc_operating = dc_metric[dc_metric["status_group"] == "Operational"]
 
     for mi in DISTANCE_THRESHOLDS:
         meters = mi * METERS_PER_MILE
