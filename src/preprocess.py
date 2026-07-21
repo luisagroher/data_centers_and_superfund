@@ -98,6 +98,40 @@ def nullable_int_to_float(df: pd.DataFrame, cols: list) -> pd.DataFrame:
             df[col] = df[col].astype("float64")
     return df
 
+
+def fix_zip(series: pd.Series) -> pd.Series:
+    """
+    Strip whitespace, drop a trailing '.0' float-export artifact
+    (e.g. '20110.0' -> '20110'), then zero-pad to 5 digits.
+    """
+    return (
+        series.str.strip()
+        .str.replace(r"\.0$", "", regex=True)
+        .str.zfill(5)
+    )
+
+
+def canonicalize_casing(df: pd.DataFrame, col: str) -> pd.DataFrame:
+    """
+    Collapse case-only variants of a free-text column (e.g. 'Manassas' vs
+    'MANASSAS') to a single canonical form, so groupby/dedup on this column
+    isn't fractured by inconsistent casing.
+
+    For each strip().lower() key, the most frequently occurring original
+    casing is chosen as canonical (ties broken by first occurrence).
+    """
+    stripped = df[col].str.strip()
+    key = stripped.str.lower()
+    canonical_map = (
+        stripped.groupby(key)
+        .agg(lambda vals: vals.value_counts().idxmax())
+    )
+    n_variants = (stripped.groupby(key).nunique() > 1).sum()
+    if n_variants:
+        print(f"  Collapsed {n_variants} casing variant group(s) in '{col}'")
+    df[col] = key.map(canonical_map)
+    return df
+
 def normalize_gis_area(row):
     area = row['GIS_AREA']
     units = str(row['GIS_AREA_UNITS']).strip().lower()
@@ -116,13 +150,46 @@ def normalize_gis_area(row):
 # DATA CENTER CLEANING
 # ─────────────────────────────────────────────────────────────────────────────
 
+def deduplicate_data_centers(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Collapses duplicate data center rows — same facility, city, state, and
+    zip (case-insensitive) — that arise from re-entries with different
+    name/city casing or literal repeat rows.
+
+    Tiebreaker: most recently updated row wins (date_updated descending).
+    Assumes city/state have already been through canonicalize_casing/upper()
+    and zip has already been through fix_zip.
+    """
+    key_cols = ["_facility_key", "city", "state", "zip"]
+    df["_facility_key"] = df["facility_name"].str.strip().str.lower()
+
+    df_sorted = df.sort_values(
+        by="date_updated", ascending=False, na_position="last"
+    )
+    df_dedup = df_sorted.drop_duplicates(subset=key_cols, keep="first").copy()
+    df_dedup.drop(columns=["_facility_key"], inplace=True)
+
+    n_dropped = len(df) - len(df_dedup)
+    if n_dropped:
+        print(f"  Deduplicated: {len(df):,} → {len(df_dedup):,} rows "
+              f"({n_dropped:,} duplicate data center rows removed)")
+
+    return df_dedup
+
+
 def clean_data_centers(path: Path) -> gpd.GeoDataFrame:
     """
-    Reads raw data center CSV, fixes dtypes, engineers simple derived columns,
-    and creates point geometry from lat/long.
+    Reads raw data center CSV, fixes dtypes, canonicalizes city/county/state
+    casing, deduplicates repeat facility rows, engineers simple derived
+    columns, and creates point geometry from lat/long.
 
     Geometry  : Point from lat/long → EPSG:4326
     Output    : data/interim/data_centers_cleaned.gpkg
+
+    Deduplication strategy
+    ──────────────────────
+    Key         : facility_name (lowercased) + city + state + zip
+    Tiebreaker  : most recently updated row (date_updated descending)
 
     Dtype fixes
     ───────────
@@ -166,6 +233,18 @@ def clean_data_centers(path: Path) -> gpd.GeoDataFrame:
     if n_invalid:
         print(f"  ⚠  Rows with invalid/missing coordinates: {n_invalid}")
 
+    # ── Zip — keep as string to preserve leading zeros ────────────────────────
+    df["zip"] = fix_zip(df["zip"])
+
+    # ── Casing cleanup — collapse case-only variants before dedup/grouping ───
+    df["state"] = df["state"].str.strip().str.upper()
+    df = canonicalize_casing(df, "city")
+    df = canonicalize_casing(df, "county")
+
+    # ── Deduplicate — same facility/city/state/zip, different casing or
+    #    literal repeat rows ───────────────────────────────────────────────────
+    df = deduplicate_data_centers(df)
+
     # ── Physical measurements → float64 ──────────────────────────────────────
     for col in ["mw", "facility_size_sqft", "property_size_acres", "project_cost"]:
         if col in df.columns:
@@ -179,9 +258,6 @@ def clean_data_centers(path: Path) -> gpd.GeoDataFrame:
     # ── Status ───────────────────────────────────────────────────────────────
     df["status"] = df["status"].str.strip().str.title()
     print(f"  Status values: {df['status'].value_counts().to_dict()}")
-
-    # ── Zip — keep as string to preserve leading zeros ────────────────────────
-    df["zip"] = df["zip"].str.strip().str.zfill(5)
 
     # ── Source columns — drop fully empty, then count ─────────────────────────
     source_cols = [c for c in df.columns if c.startswith("info_source_")]
@@ -267,6 +343,11 @@ def clean_superfund(path: Path) -> gpd.GeoDataFrame:
     df = pd.read_csv(path, dtype=str)
     print(f"  Loaded:  {df.shape[0]:,} rows × {df.shape[1]} cols")
     print(f"  Unique EPA_IDs (sites): {df['EPA_ID'].nunique():,}")
+
+    # ── Casing cleanup — collapse case-only variants ──────────────────────────
+    df["STATE_CODE"] = df["STATE_CODE"].str.strip().str.upper()
+    df = canonicalize_casing(df, "CITY_NAME")
+    df = canonicalize_casing(df, "COUNTY")
 
     # ── Numeric columns ───────────────────────────────────────────────────────
     for col in ["GIS_AREA", "Shape__Area", "Shape__Length"]:
