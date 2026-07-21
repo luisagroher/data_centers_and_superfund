@@ -56,7 +56,7 @@ COLORS = {
         'operating': '#2ECC71',   # emerald green   — operational data centers (built & running)
         'under_construction': '#E67E22',  # orange    — under construction (announced / building)
         'proposed': '#9B59B6',      # purple          — proposed (in pipeline / pending approval)
-        'superfund': '#4F8EF7',     # blue            — superfund sites (your domain, not on Brockovich)
+        'superfund': '#E9D502',     # blue            — superfund sites (your domain, not on Brockovich)
 
         # Pre/Post EO
         'pre_eo': '#A8BFDB',        # muted blue
